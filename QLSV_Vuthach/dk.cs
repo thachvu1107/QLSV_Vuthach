@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace QLSV
@@ -23,14 +24,42 @@ namespace QLSV
             }
             else
             {
-                // Lưu tài khoản và mật khẩu đã đăng ký
-                registeredUsername = textBox2.Text;
-                registeredPassword = textBox3.Text;
+                // Chuỗi kết nối (thay đổi theo server của bạn)
+                string connectionString = "Data Source=MSI\\SQLEXPRESS;Initial Catalog=QLSVDB;Integrated Security=True";
 
-                MessageBox.Show("Đăng ký thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    try
+                    {
+                        conn.Open();
+                        string query = "INSERT INTO Users (Username, Password) VALUES (@Username, @Password)";
+                        using (SqlCommand cmd = new SqlCommand(query, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@Username", textBox2.Text);
+                            cmd.Parameters.AddWithValue("@Password", textBox3.Text);
 
-                // Sau khi đăng ký xong, đóng form đăng ký và trở về form đăng nhập
-                this.Close();
+                            int rowsAffected = cmd.ExecuteNonQuery();
+                            if (rowsAffected > 0)
+                            {
+                                MessageBox.Show("Đăng ký thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                // Sau khi đăng ký xong, đóng form đăng ký
+                                this.Close();
+                            }
+                            else
+                            {
+                                MessageBox.Show("Đăng ký thất bại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        }
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        MessageBox.Show("Có lỗi xảy ra trong quá trình kết nối với cơ sở dữ liệu: " + sqlEx.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Có lỗi xảy ra: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
             }
         }
 
